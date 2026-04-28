@@ -9,10 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, FileResponse
 from sqlalchemy.orm import Session
 
-import backend.models as models
-import backend.schemas as schemas
-import backend.database as database
-import backend.services as services
+from . import models, schemas, database, services
 from .database import engine, get_db
 import asyncio
 from fastapi import BackgroundTasks
