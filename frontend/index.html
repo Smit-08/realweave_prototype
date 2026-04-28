@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RealWeave | Smart Supply Chain Intelligence</title>
+    <!-- Icons & Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js & Leaflet -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- App Loading Overlay -->
+    <div id="app-loader" class="loader-overlay">
+        <div class="loader-spinner"></div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo"><i class="fas fa-cube"></i></div>
+                <span class="brand-name">RealWeave</span>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-th-large"></i> <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-view="tracking">
+                    <i class="fas fa-paper-plane"></i> <span>Shipment Tracking</span>
+                </a>
+                <a href="#" class="nav-item" data-view="inventory">
+                    <i class="fas fa-layer-group"></i> <span>Inventory Hub</span>
+                </a>
+                <a href="#" class="nav-item" data-view="alerts">
+                    <i class="fas fa-bell"></i> <span>Alerts Center</span>
+                    <span id="alert-count-badge" class="nav-badge">0</span>
+                </a>
+                <a href="#" class="nav-item" data-view="analytics">
+                    <i class="fas fa-project-diagram"></i> <span>Deep Analytics</span>
+                </a>
+            </nav>
+
+            <div class="nav-menu" style="margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 1.5rem;">
+                <a href="#" class="nav-item" data-view="settings"><i class="fas fa-cog"></i> <span>Settings</span></a>
+                <a href="#" id="btn-logout" class="nav-item"><i class="fas fa-sign-out-alt"></i> <span>Sign Out</span></a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-wrapper">
+            <!-- Top Navigation Bar -->
+            <header class="top-bar">
+                <div class="page-title">
+                    <h1 id="view-title">Operations Dashboard</h1>
+                </div>
+                <div class="user-actions">
+                    <div class="search-container">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="global-search" class="search-input" placeholder="Search shipments...">
+                    </div>
+                    <button class="icon-btn" style="background: none; border: none; color: var(--text-dim); cursor: pointer; position: relative;">
+                        <i class="far fa-bell" style="font-size: 1.2rem;"></i>
+                        <span style="position: absolute; top: -5px; right: -5px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%;"></span>
+                    </button>
+                    <div class="profile-group">
+                        <div class="profile-text" style="text-align: right;">
+                            <p id="user-display-name" style="font-size: 0.85rem; font-weight: 600; color: #fff;">Alex Rivera</p>
+                            <p id="user-display-role" style="font-size: 0.7rem; color: var(--text-dim);">Fleet Manager</p>
+                        </div>
+                        <img src="https://api.dicebear.com/6.x/avataaars/svg?seed=Felix" alt="User" class="avatar-sm">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Scrollable Content Area -->
+            <div class="content-area" id="main-content-scroll">
+                
+                <!-- 1. Dashboard View -->
+                <div id="dashboard-view" class="view-content active">
+                    <div class="stats-grid">
+                        <div class="card stat-card">
+                            <div class="stat-label">Total Shipments <i class="fas fa-shipping-fast" style="color: var(--accent-glow);"></i></div>
+                            <div class="stat-value counter" data-target="1284">0</div>
+                            <div class="stat-footer" style="color: var(--success);"><i class="fas fa-caret-up"></i> 12.5% <span style="color: var(--text-dim); margin-left: 4px;">vs last month</span></div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="stat-label">Active Deliveries <i class="fas fa-clock" style="color: var(--success);"></i></div>
+                            <div class="stat-value counter" data-target="342">0</div>
+                            <div class="stat-footer"><span style="color: var(--text-dim);">86% on schedule</span></div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="stat-label">Critical Alerts <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i></div>
+                            <div class="stat-value counter" data-target="12" style="color: var(--danger);">0</div>
+                            <div class="stat-footer" style="color: var(--danger);"><i class="fas fa-caret-up"></i> 4 <span style="color: var(--text-dim); margin-left: 4px;">new alerts</span></div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="stat-label">Eco Savings <i class="fas fa-leaf" style="color: var(--success);"></i></div>
+                            <div class="stat-value counter" data-target="4.2">0</div>
+                            <div class="stat-footer" style="color: var(--success);"><i class="fas fa-caret-up"></i> 5.2% <span style="color: var(--text-dim); margin-left: 4px;">CO2 reduced</span></div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-main">
+                        <div class="card col-8">
+                            <div class="card-header">
+                                <h3>AI Demand Forecasting</h3>
+                                <div class="badge-group">
+                                    <span class="badge badge-info">Machine Learning Active</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 350px;">
+                                    <canvas id="demandChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card col-4">
+                            <div class="card-header">
+                                <h3>Disruption Risk</h3>
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 350px;">
+                                    <canvas id="disruptionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card col-12" style="margin-top: 1.5rem;">
+                        <div class="card-header">
+                            <h3>Global Fleet Monitor</h3>
+                            <button class="btn btn-primary" id="btn-optimize-view" style="padding: 0.5rem 1rem; font-size: 0.75rem;">Recalculate Routes</button>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                            <div id="map"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Shipment Tracking View -->
+                <div id="tracking-view" class="view-content">
+                    <div class="view-header">
+                        <div class="header-search">
+                            <input type="text" id="shipment-search" class="form-input" placeholder="Search by ID or Product...">
+                            <select id="shipment-filter" class="form-input">
+                                <option value="all">All Statuses</option>
+                                <option value="In Transit">In Transit</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Delayed">Delayed</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="btn-add-shipment"><i class="fas fa-plus"></i> New Shipment</button>
+                    </div>
+                    <div class="card">
+                        <div class="table-wrapper">
+                            <table id="shipment-table">
+                                <thead>
+                                    <tr>
+                                        <th>Shipment ID</th>
+                                        <th>Product</th>
+                                        <th>Route</th>
+                                        <th>ETA</th>
+                                        <th>Status</th>
+                                        <th>Risk</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Inventory Hub View -->
+                <div id="inventory-view" class="view-content">
+                    <div class="view-header">
+                        <div class="header-search">
+                            <input type="text" id="inventory-search" class="form-input" placeholder="Search SKU or Name...">
+                            <select id="inventory-filter" class="form-input">
+                                <option value="all">All Inventory</option>
+                                <option value="low">Low Stock Alerts</option>
+                                <option value="healthy">Healthy Stock</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="btn-add-inventory"><i class="fas fa-plus"></i> Add Product</button>
+                    </div>
+                    <div class="card">
+                        <div class="table-wrapper">
+                            <table id="inventory-table">
+                                <thead>
+                                    <tr>
+                                        <th>SKU</th>
+                                        <th>Product Name</th>
+                                        <th>Stock Level</th>
+                                        <th>Threshold</th>
+                                        <th>Status</th>
+                                        <th>Supplier</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Alerts Center View -->
+                <div id="alerts-view" class="view-content">
+                    <div class="view-header">
+                        <div class="header-search">
+                            <select id="alert-severity-filter" class="form-input">
+                                <option value="all">All Severities</option>
+                                <option value="Critical">Critical</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" id="btn-resolve-all">Mark All Resolved</button>
+                    </div>
+                    <div id="alerts-grid" class="alerts-container">
+                        <!-- Dynamic -->
+                    </div>
+                </div>
+
+                <!-- 5. Deep Analytics View -->
+                <div id="analytics-view" class="view-content">
+                    <div class="view-header">
+                        <div class="btn-group" id="analytics-range-filters">
+                            <button class="btn btn-sm active" data-range="weekly">Weekly</button>
+                            <button class="btn btn-sm" data-range="monthly">Monthly</button>
+                            <button class="btn btn-sm" data-range="yearly">Yearly</button>
+                        </div>
+                        <button class="btn btn-primary" id="btn-export-report"><i class="fas fa-download"></i> Export</button>
+                    </div>
+                    <div class="section-grid">
+                        <div class="card col-6">
+                            <div class="card-header"><h3>Monthly Shipment Volume</h3></div>
+                            <div class="card-body"><div class="chart-container" style="height: 300px;"><canvas id="analyticsMonthlyChart"></canvas></div></div>
+                        </div>
+                        <div class="card col-6">
+                            <div class="card-header"><h3>Risk Breakdown</h3></div>
+                            <div class="card-body"><div class="chart-container" style="height: 300px;"><canvas id="analyticsRiskChart"></canvas></div></div>
+                        </div>
+                        <div class="card col-4">
+                            <div class="card-header"><h3>Delay Rate %</h3></div>
+                            <div class="card-body"><div class="chart-container" style="height: 300px;"><canvas id="analyticsDelayChart"></canvas></div></div>
+                        </div>
+                        <div class="card col-8">
+                            <div class="card-header"><h3>Top Routes by Efficiency</h3></div>
+                            <div class="card-body"><div class="chart-container" style="height: 300px;"><canvas id="analyticsEfficiencyChart"></canvas></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. Settings View -->
+                <div id="settings-view" class="view-content">
+                    <div class="section-grid">
+                        <div class="card col-6">
+                            <div class="card-header"><h3>Profile Information</h3></div>
+                            <div class="card-body">
+                                <div class="input-group">
+                                    <label class="input-label">Full Name</label>
+                                    <input type="text" class="form-input" value="Alex Rivera" id="set-name">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Email Address</label>
+                                    <input type="email" class="form-input" value="alex.rivera@realweave.ai" id="set-user-email">
+                                </div>
+                                <div class="input-group">
+                                    <label class="input-label">Role</label>
+                                    <input type="text" class="form-input" value="Global Fleet Manager" id="set-user-role" disabled>
+                                </div>
+                                <button class="btn btn-primary" id="save-profile">Save Profile</button>
+                            </div>
+                        </div>
+                        <div class="card col-6">
+                            <div class="card-header"><h3>App Preferences</h3></div>
+                            <div class="card-body">
+                                <div class="toggle-group">
+                                    <span>Dark Mode</span>
+                                    <label class="switch"><input type="checkbox" checked><span class="slider round"></span></label>
+                                </div>
+                                <div class="toggle-group">
+                                    <span>Email Notifications</span>
+                                    <label class="switch"><input type="checkbox" checked><span class="slider round"></span></label>
+                                </div>
+                                <div class="toggle-group">
+                                    <span>AI Assistant Enabled</span>
+                                    <label class="switch"><input type="checkbox" checked><span class="slider round"></span></label>
+                                </div>
+                                <div class="input-group" style="margin-top: 1rem;">
+                                    <label class="input-label">System Language</label>
+                                    <select class="form-input">
+                                        <option>English (US)</option>
+                                        <option>German</option>
+                                        <option>Spanish</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container" class="modal-overlay">
+        <div class="modal-content glass animate-scale">
+            <div class="modal-header">
+                <h3 id="modal-title">Modal Title</h3>
+                <i class="fas fa-times modal-close" id="btn-close-modal"></i>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Dynamic Form -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel-modal">Cancel</button>
+                <button class="btn btn-primary" id="btn-submit-modal">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Chat Widget -->
+    <div class="chat-widget">
+        <div id="toggle-chat" class="chat-toggle"><i class="fas fa-comment-dots"></i></div>
+        <div id="ai-chat" class="chat-window">
+            <div class="chat-header">
+                <span>AI Assistant</span>
+                <i class="fas fa-times" id="close-chat"></i>
+            </div>
+            <div id="chat-messages" class="chat-body"></div>
+            <div class="chat-footer">
+                <input type="text" id="chat-input" class="form-input" placeholder="Type a message...">
+                <button id="send-chat" class="btn btn-primary btn-icon"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Fragments (Hidden) -->
+    <template id="tpl-shipment-form">
+        <div class="input-group">
+            <label class="input-label">Product Name</label>
+            <input type="text" id="f-ship-product" class="form-input" required>
+        </div>
+        <div class="grid-2">
+            <div class="input-group">
+                <label class="input-label">Source</label>
+                <input type="text" id="f-ship-source" class="form-input" required>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Destination</label>
+                <input type="text" id="f-ship-dest" class="form-input" required>
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="input-group">
+                <label class="input-label">ETA</label>
+                <input type="text" id="f-ship-eta" class="form-input" placeholder="e.g. 2h 30m">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Status</label>
+                <select id="f-ship-status" class="form-input">
+                    <option>In Transit</option>
+                    <option>Delivered</option>
+                    <option>Delayed</option>
+                    <option>Pending</option>
+                </select>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-inventory-form">
+        <div class="input-group">
+            <label class="input-label">Product Name</label>
+            <input type="text" id="f-inv-name" class="form-input" required>
+        </div>
+        <div class="grid-2">
+            <div class="input-group">
+                <label class="input-label">SKU</label>
+                <input type="text" id="f-inv-sku" class="form-input" required>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Stock</label>
+                <input type="number" id="f-inv-stock" class="form-input" required>
+            </div>
+        </div>
+        <div class="grid-2">
+            <div class="input-group">
+                <label class="input-label">Threshold</label>
+                <input type="number" id="f-inv-threshold" class="form-input" required>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Supplier</label>
+                <input type="text" id="f-inv-supplier" class="form-input">
+            </div>
+        </div>
+    </template>
+
+
+    <script src="js/app.js?v=1.0.1"></script>
+</body>
+</html>
