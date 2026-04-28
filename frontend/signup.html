@@ -78,7 +78,7 @@
         </form>
 
         <p style="margin-top: 2.5rem; text-align: center; font-size: 0.9rem; color: var(--text-dim);">
-            Already have an account? <a href="login.html" style="color: var(--accent-glow); text-decoration: none; font-weight: 600; margin-left: 5px;">Sign in</a>
+            Already have an account? <a href="/login" style="color: var(--accent-glow); text-decoration: none; font-weight: 600; margin-left: 5px;">Sign in</a>
         </p>
     </div>
 
@@ -105,7 +105,7 @@
                 
                 if (response.ok) {
                     alert('Account created! Please sign in.');
-                    window.location.href = '/static/login.html';
+                    window.location.href = '/login';
                 } else {
                     alert(data.detail || 'Signup failed');
                 }

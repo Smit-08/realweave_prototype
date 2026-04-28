@@ -1,5 +1,6 @@
 import requests
 import os
+import random
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,7 +14,6 @@ class WeatherService:
     def get_weather_alerts(lat, lon):
         if not WEATHER_API_KEY or "your_" in WEATHER_API_KEY:
             # Simulated Realtime Fallback
-            import random
             if random.random() > 0.99: # 1% chance — only critical events
                 return [{
                     "type": "Weather Simulation",
@@ -91,7 +91,6 @@ class TrafficService:
     def get_congestion_alert(lat, lon):
         if not TOMTOM_API_KEY or "your_" in TOMTOM_API_KEY:
             # Simulated Traffic Fallback
-            import random
             if random.random() > 0.99: # 1% chance — only severe congestion
                 return {
                     "type": "Traffic Simulation",

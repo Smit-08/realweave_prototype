@@ -139,7 +139,7 @@
         </form>
 
         <p style="margin-top: 2.5rem; text-align: center; font-size: 0.9rem; color: var(--text-dim);">
-            Don't have an account? <a href="signup.html" style="color: var(--accent-glow); text-decoration: none; font-weight: 600; margin-left: 5px;">Sign up</a>
+            Don't have an account? <a href="/signup" style="color: var(--accent-glow); text-decoration: none; font-weight: 600; margin-left: 5px;">Sign up</a>
         </p>
     </div>
 
@@ -168,7 +168,7 @@
                     localStorage.setItem('ss_user', JSON.stringify(data.user));
                     localStorage.setItem('ss_token', data.token);
                     
-                    window.location.href = '/static/index.html';
+                    window.location.href = '/';
                 } else {
                     alert(data.detail || 'Invalid credentials');
                 }

@@ -45,7 +45,12 @@ const API = {
     },
     ai: {
         predictDelay: (lat, lng) => API.fetch(`/predict-delay?lat=${lat}&lng=${lng}`),
-        optimizeRoute: (s_lng, s_lat, e_lng, e_lat) => API.fetch(`/optimize-route?start_lng=${s_lng}&start_lat=${s_lat}&end_lng=${e_lng}&end_lat=${e_lat}`)
+        optimizeRoute: (s_lng, s_lat, e_lng, e_lat) => API.fetch(`/optimize-route?start_lng=${s_lng}&start_lat=${s_lat}&end_lng=${e_lng}&end_lat=${e_lat}`),
+        chat: (message) => API.fetch("/chat", { method: "POST", body: JSON.stringify({ message }) })
+    },
+    settings: {
+        save: (data) => API.fetch("/settings", { method: "POST", body: JSON.stringify(data) }),
+        get: () => API.fetch("/settings")
     }
 };
 
@@ -76,7 +81,7 @@ const App = {
     checkAuth() {
         const user = localStorage.getItem('ss_user');
         if (!user) {
-            window.location.href = '/static/login.html';
+            window.location.href = '/login';
         } else {
             this.user = JSON.parse(user);
         }
@@ -151,7 +156,7 @@ const App = {
                 this.toast("Signing out...", "info");
                 localStorage.removeItem('ss_user');
                 localStorage.removeItem('ss_token');
-                setTimeout(() => window.location.href = '/static/login.html', 1000);
+                setTimeout(() => window.location.href = '/login', 1000);
             };
         }
     },
@@ -762,8 +767,79 @@ const App = {
         };
     },
 
-    setupChat() {},
-    setupSettings() {},
+    setupChat() {
+        const toggle = document.getElementById('toggle-chat');
+        const chatWindow = document.getElementById('ai-chat');
+        const close = document.getElementById('close-chat');
+        const input = document.getElementById('chat-input');
+        const send = document.getElementById('send-chat');
+        const messages = document.getElementById('chat-messages');
+
+        if (!toggle || !chatWindow) return;
+
+        toggle.onclick = () => chatWindow.classList.toggle('active');
+        close.onclick = () => chatWindow.classList.remove('active');
+
+        const addMessage = (text, type) => {
+            const msg = document.createElement('div');
+            msg.className = `chat-msg msg-${type}`;
+            msg.innerHTML = `<div class="msg-bubble">${text}</div>`;
+            messages.appendChild(msg);
+            messages.scrollTop = messages.scrollHeight;
+        };
+
+        const handleChat = async () => {
+            const text = input.value.trim();
+            if (!text) return;
+            
+            input.value = '';
+            addMessage(text, 'user');
+            
+            const res = await API.ai.chat(text);
+            if (res) {
+                addMessage(res.response, 'ai');
+            }
+        };
+
+        send.onclick = handleChat;
+        input.onkeypress = (e) => { if (e.key === 'Enter') handleChat(); };
+
+        // Welcome message
+        setTimeout(() => {
+            if (messages.children.length === 0) {
+                addMessage("Hello! I am your RealWeave AI assistant. How can I help you optimize your supply chain today?", "ai");
+            }
+        }, 1000);
+    },
+
+    async setupSettings() {
+        const saveBtn = document.getElementById('save-profile');
+        if (saveBtn) {
+            saveBtn.onclick = async () => {
+                const data = {
+                    name: document.getElementById('set-name').value,
+                    email: document.getElementById('set-user-email').value,
+                    darkMode: document.querySelector('.toggle-group input[type="checkbox"]').checked
+                };
+                
+                const res = await API.settings.save(data);
+                if (res) {
+                    this.user.name = data.name;
+                    this.user.email = data.email;
+                    localStorage.setItem('ss_user', JSON.stringify(this.user));
+                    this.updateUserProfileUI();
+                    this.toast("Settings saved successfully!", "success");
+                }
+            };
+        }
+
+        // Load settings from backend if available
+        const remoteSettings = await API.settings.get();
+        if (remoteSettings) {
+            if (remoteSettings.name) document.getElementById('set-name').value = remoteSettings.name;
+            if (remoteSettings.email) document.getElementById('set-user-email').value = remoteSettings.email;
+        }
+    },
     startAutoRefresh() {
         // High frequency refresh for realtime simulation (10 seconds)
         setInterval(() => {

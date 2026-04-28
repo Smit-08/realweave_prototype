@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 from sqlalchemy.orm import Session
 
 import backend.models as models
@@ -33,7 +33,15 @@ app.add_middleware(
 
 @app.get("/")
 def root():
-    return RedirectResponse(url="/static/index.html")
+    return FileResponse(os.path.join(frontend_path, "index.html"))
+
+@app.get("/login")
+def login_page():
+    return FileResponse(os.path.join(frontend_path, "login.html"))
+
+@app.get("/signup")
+def signup_page():
+    return FileResponse(os.path.join(frontend_path, "signup.html"))
 
 # Seed Data Function
 def seed_db(db: Session):
@@ -266,6 +274,36 @@ def get_analytics(time_range: str = "monthly", db: Session = Depends(get_db)):
         }
     }
 
+@app.post("/api/chat")
+def ai_chat(data: dict):
+    message = data.get("message", "").lower()
+    
+    # Simple rule-based AI response for MVP
+    if "shipment" in message:
+        return {"response": "I can help you track your shipments. Currently, you have several shipments in transit between Shanghai and Mumbai. Would you like to see the risk analysis for any specific one?"}
+    elif "alert" in message:
+        return {"response": "The system is currently monitoring 12 critical alerts. Most are related to heavy rain in the Mumbai corridor. I recommend diverting SH-4592."}
+    elif "inventory" in message:
+        return {"response": "Inventory levels for Lithium Batteries are below the threshold. I've flagged this in the Inventory Hub for you."}
+    else:
+        return {"response": "Hello! I am the RealWeave AI assistant. I can help you with shipment tracking, risk analysis, and inventory optimization. How can I assist you today?"}
+
+@app.post("/api/settings")
+def update_settings(data: dict, db: Session = Depends(get_db)):
+    for key, value in data.items():
+        db_setting = db.query(models.Setting).filter(models.Setting.key == key).first()
+        if db_setting:
+            db_setting.value = str(value)
+        else:
+            db.add(models.Setting(key=key, value=str(value)))
+    db.commit()
+    return {"status": "success"}
+
+@app.get("/api/settings")
+def get_settings(db: Session = Depends(get_db)):
+    settings = db.query(models.Setting).all()
+    return {s.key: s.value for s in settings}
+
 @app.post("/api/signup")
 def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(models.User).filter(models.User.email == user.email).first()
@@ -317,7 +355,10 @@ def login(data: dict, db: Session = Depends(get_db)):
 # --- STATIC CONTENT & FRONTEND ---
 
 frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend"))
-app.mount("/static", StaticFiles(directory=frontend_path), name="static")
+
+# Mount CSS and JS subdirectories specifically to avoid serving HTML at /static/
+app.mount("/css", StaticFiles(directory=os.path.join(frontend_path, "css")), name="css")
+app.mount("/js", StaticFiles(directory=os.path.join(frontend_path, "js")), name="js")
 
 if __name__ == "__main__":
     import uvicorn
